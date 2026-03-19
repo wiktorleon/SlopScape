@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SlopScape</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<!-- Loading screen -->
+<div id="loadingScreen">
+  <h1>SlopScape</h1>
+  <p>Loading game data...</p>
+  <div class="loading-bar">
+    <div class="loading-bar-fill"></div>
+  </div>
+  <p style="font-size:11px; color:#666">Browser implementation &bull; Use right-click for options</p>
+</div>
+
+<div id="gameContainer" style="display:none;">
+
+  <div id="topBar">
+    <span style="color:#ffcc00; font-weight:bold; font-size:13px;">SlopScape</span>
+    <span id="topBarInfo">
+      HP: <span id="hpDisplay" style="color:#00cc00;">10/10</span>
+      &nbsp;&bull;&nbsp;
+      Combat: <span id="cbDisplay" style="color:#ffaa00;">3</span>
+      &nbsp;&bull;&nbsp;
+      Coords: <span id="coordDisplay" style="color:#aaaaaa;">62, 62</span>
+    </span>
+    <span style="margin-left:auto; color:#666; font-size:10px;">[R] Toggle Run &nbsp; Right-click for options</span>
+  </div>
+
+  <div id="mainLayout">
+
+    <!-- Left: game canvas + chat -->
+    <div id="canvasArea">
+      <canvas id="gameCanvas" width="608" height="416"></canvas>
+
+      <div id="chatArea">
+        <div id="chatHeader">
+          <span>Chat</span>
+          <span style="font-size:10px; color:#555;">Game messages appear here</span>
+        </div>
+        <div id="chatMessages"></div>
+        <div id="chatInput">
+          <input type="text" id="chatField" placeholder="Type here to chat..." maxlength="80" />
+        </div>
+      </div>
+    </div>
+
+    <!-- Right: sidebar -->
+    <div id="sidebar">
+      <div id="sidebarTop">
+        <div id="tabBar">
+          <button class="tab-btn active" data-panel="0">INV</button>
+          <button class="tab-btn" data-panel="1">STATS</button>
+          <button class="tab-btn" data-panel="2">EQUIP</button>
+          <button class="tab-btn" data-panel="3">PRAY</button>
+          <button class="tab-btn" data-panel="4">MAGIC</button>
+        </div>
+        <canvas id="sidebarCanvas" width="236" height="500"></canvas>
+      </div>
+
+      <div id="minimapArea">
+        <div>
+          <div style="text-align:center; font-size:10px; color:#888800; margin-bottom:2px;">Map</div>
+          <canvas id="minimapCanvas" width="120" height="120"></canvas>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- end mainLayout -->
+
+</div><!-- end gameContainer -->
+
+<script type="module">
+  import { CANVAS_W, CANVAS_H } from './js/constants.js';
+
+  // Remove loading screen after a short delay, then start
+  setTimeout(() => {
+    document.getElementById('loadingScreen').style.display = 'none';
+    document.getElementById('gameContainer').style.display = 'block';
+  }, 1800);
+</script>
+
+<script type="module" src="js/main.js"></script>
+
+<script type="module">
+  // Top bar HUD updater
+  function updateHUD() {
+    if (!window._game) { requestAnimationFrame(updateHUD); return; }
+    const player = window._game.player;
+    if (!player) { requestAnimationFrame(updateHUD); return; }
+
+    const hpEl = document.getElementById('hpDisplay');
+    const cbEl = document.getElementById('cbDisplay');
+    const coordEl = document.getElementById('coordDisplay');
+
+    if (hpEl) {
+      hpEl.textContent = `${player.hp}/${player.maxHp}`;
+      const ratio = player.hp / player.maxHp;
+      hpEl.style.color = ratio > 0.6 ? '#00cc00' : ratio > 0.3 ? '#cccc00' : '#cc0000';
+    }
+    if (cbEl) cbEl.textContent = player.combatLevel;
+    if (coordEl) coordEl.textContent = `${player.tileX}, ${player.tileY}`;
+
+    requestAnimationFrame(updateHUD);
+  }
+  requestAnimationFrame(updateHUD);
+
+  // Chat input
+  document.addEventListener('DOMContentLoaded', () => {
+    const chatField = document.getElementById('chatField');
+    if (chatField) {
+      chatField.addEventListener('keydown', e => {
+        if (e.key === 'Enter' && chatField.value.trim()) {
+          const msg = chatField.value.trim();
+          if (window._game && window._game.chatbox) {
+            window._game.chatbox.addMessage(`You: ${msg}`, '#ffffff');
+          }
+          chatField.value = '';
+          e.preventDefault();
+        }
+        e.stopPropagation(); // Prevent game keys when typing
+      });
+    }
+  });
+</script>
+
+</body>
+</html>
